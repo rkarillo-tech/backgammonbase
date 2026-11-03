@@ -1,5 +1,5 @@
 /* BackgammonBase · service worker: red primero (para tener siempre la última versión) y caché si no hay conexión. */
-const CACHE = "backgammonbase-v1";
+const CACHE = "backgammonbase-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", e => {

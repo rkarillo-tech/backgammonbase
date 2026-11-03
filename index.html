@@ -326,6 +326,15 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
 .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .cat-chip.active { background: #593d16; border-color: var(--warn); }
 .mv-mark { font-size: .72rem; margin-left: 1px; }
+.drill-box { border-color: var(--info); background: #13202e; }
+.drill-box .retry-q b { color: #e1f5fe; }
+.lesson-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.lesson-tab { justify-content: center; }
+.lesson-tab.active { background: var(--panel3); border-color: var(--info); }
+.lesson-fig { margin: 8px 12px 10px; text-align: center; }
+.lesson-fig svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto; border-radius: 6px; }
+.lesson-fig figcaption { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+.lesson-body table { margin: 6px 12px; }
 .quiz-box { background: #13202e; border: 1px solid var(--info); border-radius: 8px; padding: 9px 11px; font-size: .86rem; margin-top: 8px; }
 .app-footer { text-align: center; color: var(--muted); font-size: .76rem; padding: 6px 12px 22px; }
 .link-inline { background: none; border: 0; padding: 0; color: var(--info); text-decoration: underline; cursor: pointer; font-size: inherit; display: inline; }
@@ -428,6 +437,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
       </div>
     </div>
     <div class="player-bar bottom" id="bottomBar"></div>
+    <div id="drillBox" class="retry-box drill-box" hidden aria-live="polite"></div>
 
     <div class="dice-row" id="diceRow">
       <button id="rollBtn" class="primary big-btn" title="Tirar los dados (R)">🎲 Tirar</button>
@@ -767,17 +777,21 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
         <div class="controls"><button id="openQuizBtn" class="primary">▶ Empezar</button></div>
       </div>
       <div class="section">
-        <h2><span>🔢 Recuento de pips</span><span id="pipQuizScore" class="srs-pill">0 / 0</span></h2>
-        <p class="small">Aparece una posición de medio juego: cuenta los pips de cada bando (sin mirar las barras de arriba y abajo, que se ocultan).</p>
-        <div class="controls"><button id="pipQuizBtn" class="primary">▶ Nueva posición</button></div>
-        <div id="pipQuizBox" class="quiz-box" hidden>
-          <div class="grid2">
-            <div><label for="pipW">Pips de Blancas</label><input id="pipW" inputmode="numeric"></div>
-            <div><label for="pipB">Pips de Negras</label><input id="pipB" inputmode="numeric"></div>
-          </div>
-          <div class="controls"><button id="pipCheckBtn" class="primary">✔ Comprobar</button></div>
-          <div id="pipQuizMsg" class="small"></div>
+        <h2><span>🧮 Contar casillas</span><span id="cntScore" class="srs-pill">0 / 0</span></h2>
+        <p class="small">Se marca una ficha y sale un dado: pulsa el punto donde cae. Si fallas, el tablero cuenta contigo casilla a casilla. Los niveles van de un dado a entrar desde la barra, sacar fichas y contar las fichas del rival.</p>
+        <div class="grid2">
+          <div><label for="cntLevel">Nivel</label>
+            <select id="cntLevel"><option value="1">1 · Un dado</option><option value="2">2 · Los dos dados seguidos</option><option value="3">3 · Entrar desde la barra</option><option value="4">4 · Sacar fichas</option><option value="5">5 · Fichas del rival</option><option value="6">6 · Mezcla</option></select></div>
+          <div><label>&nbsp;</label><label class="switch"><input type="checkbox" id="cntHideNums"> Sin números en el tablero (más difícil)</label></div>
         </div>
+        <div class="controls"><button id="cntStartBtn" class="primary">▶ Empezar</button><button id="cntLessonBtn" class="sm-btn">📖 Cómo se cuentan las casillas</button></div>
+      </div>
+      <div class="section">
+        <h2><span>🔢 Recuento de pips</span><span id="pipQuizScore" class="srs-pill">0 / 0</span></h2>
+        <p class="small">Aprende a contar los pips (las casillas que le faltan a cada bando para terminar) paso a paso: primero un montón, luego un cuadrante, un bando, los dos y, por último, a llevar la cuenta jugada a jugada. Al corregir, el tablero enseña los pips de cada montón.</p>
+        <div><label for="pipLevel">Nivel</label>
+          <select id="pipLevel"><option value="1">1 · Un montón (fichas × punto)</option><option value="2">2 · Un cuadrante</option><option value="3">3 · Un bando entero</option><option value="4">4 · Los dos bandos: ¿quién va delante?</option><option value="5">5 · Conteo continuo: tras una jugada</option></select></div>
+        <div class="controls"><button id="pipQuizBtn" class="primary">▶ Empezar</button><button id="pipLessonBtn" class="sm-btn">📖 Cómo se cuentan los pips</button></div>
       </div>
       <div class="controls"><button id="exBackBtn" class="sm-btn warn-btn" hidden>↩ Volver a la partida</button></div>
       <div id="trainFeedback" class="note-box" aria-live="polite" hidden></div>
@@ -808,6 +822,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
     <div class="chk-row" style="margin-top:10px">
       <label><input type="checkbox" id="setBearoff"> Tablas exactas de retirada (se calculan al abrir, ~2 s)</label>
       <label><input type="checkbox" id="setLegal"> Mostrar destinos legales</label>
+      <label><input type="checkbox" id="setDieLabels"> Indicar con qué dado llega a cada destino</label>
       <label><input type="checkbox" id="setAutoRoll"> Tirar por mí cuando no puedo doblar</label>
       <label><input type="checkbox" id="setAutosave"> Recordar la partida al recargar</label>
       <label><input type="checkbox" id="setWheel"> Rueda del ratón para avanzar/retroceder</label>
@@ -844,7 +859,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
         <summary>🎲 2. Tirar, mover y recorrer la partida</summary>
         <ul>
           <li><b>Tirar</b>: botón <b>🎲 Tirar</b>, tecla <kbd>R</kbd> o clic en la mitad del tablero de quien mueve. En la primera jugada cada jugador tira un dado y empieza el que saca más, con esos dos dados.</li>
-          <li><b>Mover</b>: pulsa una ficha (se iluminan sus destinos) y luego el destino, o arrástrala. Si pulsas un destino que necesita los dos dados, se hacen los dos pasos. Para <b>sacar</b> fichas, llévalas a la bandeja de la derecha.</li>
+          <li><b>Mover</b>: pulsa una ficha (se iluminan sus destinos, cada uno con el dado que usa: «4», «6+4», «3×3») y luego el destino, o arrástrala. Si pulsas un destino que necesita los dos dados, se hacen los dos pasos. Para <b>sacar</b> fichas, llévalas a la bandeja de la derecha.</li>
           <li>La aplicación aplica todas las reglas: usar los dos dados si se puede (y el mayor si sólo cabe uno), entrar desde la barra antes que nada, golpear, no poder caer en puntos con dos o más fichas rivales y las condiciones para sacar.</li>
           <li><b>↶ Deshacer</b> (o <kbd>Retroceso</kbd>) devuelve las fichas de la jugada a medias. La jugada se registra sola cuando has usado todos los dados posibles.</li>
           <li><b>Escribir la jugada</b>: en el recuadro bajo el tablero, <code>8/5 6/5</code>, <code>bar/22*</code>, <code>13/7(2)</code>, <code>6/off</code> (también <code>barra</code> y <code>fuera</code>) y <kbd>Intro</kbd>.</li>
@@ -957,7 +972,9 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
         <ul>
           <li><b>Tarjetas</b>: tus marcadores entrenables con repetición espaciada.</li>
           <li><b>Tiradas de apertura</b>: sale una tirada al azar y la juegas; te dice si es la recomendada.</li>
-          <li><b>Recuento de pips</b>: cuenta los pips de una posición de medio juego y compruébalo.</li>
+          <li><b>🧮 Contar casillas</b>: se marca una ficha y sale un dado; pulsa el punto donde cae. Niveles: un dado, los dos seguidos, entrar desde la barra, sacar fichas, fichas del rival y mezcla. Si fallas, el tablero numera el recorrido casilla a casilla. Con «sin números» cuentas de memoria.</li>
+          <li><b>🔢 Recuento de pips</b>: de un montón (fichas × punto) a un cuadrante, un bando, los dos bandos y el conteo continuo tras una jugada. Al corregir, el marco del tablero muestra los pips de cada montón y la explicación desglosa la cuenta.</li>
+          <li><b>📖 Lecciones</b>: «Cómo se cuentan las casillas» (numeración, barra, sacar, distancias de golpe) y «Cómo se cuentan los pips» (multiplicar, cuadrantes, cancelar, conteo continuo), con diagramas.</li>
           <li><b>↩ Volver a la partida</b> te devuelve a donde estabas.</li>
         </ul>
       </details>
@@ -1012,6 +1029,15 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
         </dl>
       </details>
     </div>
+  </div>
+</div>
+
+<!-- Lecciones -->
+<div class="modal-back" id="lessonModal" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
+  <div class="modal wide">
+    <h2 id="lessonTitle"><span>📖 Aprender a contar</span><button class="sm-btn" data-close>Cerrar</button></h2>
+    <div class="lesson-tabs"><button class="lesson-tab" data-lesson="count">🧮 Las casillas y los dados</button><button class="lesson-tab" data-lesson="pips">🔢 Los pips</button></div>
+    <div id="lessonBody" class="help-body lesson-body"></div>
   </div>
 </div>
 
@@ -1745,7 +1771,7 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}.${String(
 /* ---------- Ajustes ---------- */
 const DEFAULTS = {
   checkers: "classic", theme: "wood", sound: true, live: true, arrow: false, ply: 1, analysisPly: 2, top: 6, cpuLevel: 6,
-  branchMode: "variation", numbers: "bottom", home: "right", bearoff: true, showLegal: true, autoRoll: true, autosave: true,
+  branchMode: "variation", numbers: "bottom", home: "right", bearoff: true, showLegal: true, dieLabels: true, autoRoll: true, autosave: true,
   wheel: true, pips: true, moveView: "sheet", starter: "auto"
 };
 const settings = Object.assign({}, DEFAULTS, LS.get("bgbSettings", {}));
@@ -2109,11 +2135,11 @@ const ui = {
   flipped: false, rolled: null, partial: null, sel: null, drag: null, autoplay: null, nodeMap: new Map(),
   cpu: { on: false, side: 1, busy: false, prevLive: true }, analysing: false, cancelAnalysis: false, activeTab: "study",
   libId: null, dirty: false, rev: 0, saveError: "", recUpdated: 0, fav: false, tags: [], markCtx: null, librarySub: "games",
-  ex: null, hint: null, liveGen: 0, report: null, analysedLine: null, hidePips: false
+  ex: null, count: null, pipq: null, hint: null, liveGen: 0, report: null, analysedLine: null, hidePips: false
 };
 const editor = { active: false, pos: null, tool: 0, t: 0, cubeV: 1, cubeO: -1, origin: null, dragFrom: null };
 const cur = () => game.current;
-const quiz = () => !!ui.ex;
+const quiz = () => !!(ui.ex || ui.count || ui.pipq);
 
 /* ---------- Sonido ---------- */
 const Sound = {
@@ -2214,6 +2240,11 @@ function boardSvg(pos, opts = {}) {
     else if (opts.sel === 24) s += `<rect x="${rx(G.bar0, 60)}" y="${opts.mover === B ? G.mid : G.top}" width="60" height="355" fill="#ffeb3b" opacity=".25"/>`;
     void a;
   }
+  // zona resaltada (p. ej. un cuadrante)
+  if (opts.zone) for (let i = opts.zone.from; i <= opts.zone.to; i++) {
+    const n = opts.zone.side === B ? i + 1 : 24 - i, g = ptGeo(n, mx);
+    s += `<rect x="${g.x - G.PW / 2 + 1}" y="${g.top ? G.top : G.mid}" width="${G.PW - 2}" height="${G.mid - G.top}" fill="#29b6f6" opacity=".2"/>`;
+  }
   // fichas
   const stack = (x, n, top, side, max = 5) => {
     if (!n) return "";
@@ -2279,12 +2310,22 @@ function boardSvg(pos, opts = {}) {
     s += `<g data-hit="roll" class="hot"><rect x="${cx - 80}" y="${G.mid - 26}" width="160" height="52" rx="12" fill="#26593a" stroke="#43875d" stroke-width="2"/><text x="${cx}" y="${G.mid + 8}" font-size="22" font-weight="800" text-anchor="middle" fill="#fff">🎲 Tirar</text></g>`;
   }
   // destinos
-  if (opts.targets) for (const [to] of opts.targets) {
-    if (to === -1) { s += `<rect x="${tx - 6}" y="${opts.mover === B ? G.mid + 4 : G.top + 2}" width="72" height="350" rx="6" fill="none" stroke="#66bb6a" stroke-width="5" stroke-dasharray="10 6"/>`; continue; }
+  if (opts.targets) for (const [to, path] of opts.targets) {
+    const lab = opts.dieLabels && path ? dieLabel(path) : "";
+    const pill = (x, y) => {
+      if (!lab) return `<circle cx="${x}" cy="${y}" r="15" fill="#2e7d32" opacity=".75" stroke="#c8e6c9" stroke-width="2"/>`;
+      const w = Math.max(32, lab.length * 11 + 12);
+      return `<rect x="${x - w / 2}" y="${y - 16}" width="${w}" height="32" rx="16" fill="#2e7d32" opacity=".92" stroke="#c8e6c9" stroke-width="2"/><text x="${x}" y="${y + 7}" font-size="19" font-weight="800" text-anchor="middle" fill="#fff">${lab}</text>`;
+    };
+    if (to === -1) {
+      s += `<rect x="${tx - 6}" y="${opts.mover === B ? G.mid + 4 : G.top + 2}" width="72" height="350" rx="6" fill="none" stroke="#66bb6a" stroke-width="5" stroke-dasharray="10 6"/>`;
+      if (lab) s += pill(tx + 30, opts.mover === B ? G.mid + 40 : G.mid - 40);
+      continue;
+    }
     const n = opts.mover === B ? to + 1 : 24 - to, g = ptGeo(n, mx);
     const occ = pos[opts.mover][to] || 0;
     const y = g.top ? G.top + G.R + Math.min(occ, 5) * 2 * G.R : G.bot - G.R - Math.min(occ, 5) * 2 * G.R;
-    s += `<circle cx="${g.x}" cy="${y}" r="15" fill="#2e7d32" opacity=".75" stroke="#c8e6c9" stroke-width="2"/>`;
+    s += pill(g.x, y);
   }
   // flechas
   if (opts.arrows && opts.arrows.length) {
@@ -2294,6 +2335,22 @@ function boardSvg(pos, opts = {}) {
       const len = Math.hypot(b.x - a.x, b.y - a.y) || 1, ex = b.x - (b.x - a.x) / len * 18, ey = b.y - (b.y - a.y) / len * 18;
       const mid = { x: (a.x + ex) / 2, y: (a.y + ey) / 2 + (Math.abs(b.x - a.x) < 5 ? 0 : (a.y < G.mid ? 60 : -60) * (Math.abs(a.y - b.y) < 200 ? 1 : 0)) };
       s += `<path d="M${a.x},${a.y} Q${mid.x},${mid.y} ${ex},${ey}" fill="none" stroke="${ARROW_COL[ar.kind]}" stroke-width="${ar.kind === "last" ? 7 : 10}" stroke-linecap="round" opacity="${ar.kind === "last" ? 0.55 : 0.85}" marker-end="url(#ah-${ar.kind})"/>`;
+    }
+  }
+  // marcas sobre el marco (conteo casilla a casilla, pips de cada montón…)
+  if (opts.marks && opts.marks.length) {
+    const MC = { step: ["#1e88e5", "#fff"], ok: ["#2e7d32", "#fff"], bad: ["#c62828", "#fff"], info: ["#ef6c00", "#fff"] };
+    for (const m of opts.marks) {
+      let x, top;
+      if (m.idx === 24) { x = mx((G.bar0 + G.bar1) / 2); top = m.side !== B; }
+      else if (m.idx === -1) { x = mx((G.tray0 + G.tray1) / 2); top = m.side !== B; }
+      else { const g = ptGeo(m.side === B ? m.idx + 1 : 24 - m.idx, mx); x = g.x; top = g.top; }
+      const y = top ? 12.5 : 747.5, txt = String(m.text);
+      let fill, col;
+      if (m.kind === "pip") { const c = CHECKERS[style][m.side]; fill = c.fill; col = c.text; }
+      else [fill, col] = MC[m.kind || "step"];
+      const w = Math.max(25, txt.length * 10 + 12);
+      s += `<rect x="${x - w / 2}" y="${y - 12}" width="${w}" height="24" rx="12" fill="${fill}" stroke="#000" stroke-opacity=".55" stroke-width="1.5"/><text x="${x}" y="${y + 5.5}" font-size="16" font-weight="800" text-anchor="middle" fill="${col}">${txt}</text>`;
     }
   }
   // zonas de clic
@@ -2307,6 +2364,12 @@ function boardSvg(pos, opts = {}) {
     s += `<rect data-hit="tray" class="hot" x="${rx(G.tray0, G.tray1 - G.tray0)}" y="${G.top}" width="${G.tray1 - G.tray0}" height="710" fill="transparent"/>`;
   }
   return s + "</svg>";
+}
+/* Etiqueta de los dados que usa un destino: «4», «6+4», «3×3» */
+function dieLabel(path) {
+  const d = path.map(x => x[3]);
+  if (d.length > 1 && d.every(v => v === d[0])) return `${d[0]}×${d.length}`;
+  return d.join("+");
 }
 const ARROW_COL = { last: "#ffeb3b", best: "rgba(186,104,200,0.95)", green: "rgba(76,175,80,0.95)", red: "rgba(239,83,80,0.95)", blue: "rgba(41,182,246,0.95)" };
 
@@ -2413,7 +2476,7 @@ function humanSide(node) {
   return st.t;
 }
 function canUserAct(node = cur()) {
-  if (editor.active || ui.analysing && false) return false;
+  if (editor.active || ui.count || ui.pipq) return false;
   if (ui.ex) return !ui.ex.busy && ui.ex.node === node && !ui.ex.done;
   if (ui.cpu.on) { if (ui.cpu.busy) return false; const h = humanSide(node); if (h != null && h === ui.cpu.side) return false; }
   if ($("racePractice").checked && ui.activeTab === "race" && humanSide(node) === 1 - bottom()) return false;
@@ -2422,7 +2485,7 @@ function canUserAct(node = cur()) {
 const bottom = () => (ui.flipped ? 1 : 0);
 function canRoll(node = cur()) {
   const st = node.state;
-  if (st.phase !== "roll" || editor.active || ui.ex) return false;
+  if (st.phase !== "roll" || editor.active || quiz()) return false;
   if (ui.rolled && ui.rolled.node === node) return false;
   if (ui.cpu.on && (ui.cpu.busy || (!st.opening && st.t === ui.cpu.side))) return false;
   return true;
@@ -2456,7 +2519,7 @@ function afterDiceShown(node) {
 function useManualDice() {
   const node = cur();
   if (node.state.phase !== "roll") { toast("Ahora no se tiran dados."); return; }
-  if (ui.ex) { toast("Estás en un ejercicio."); return; }
+  if (quiz()) { toast("Estás en un ejercicio."); return; }
   const d1 = +$("manD1").value, d2 = +$("manD2").value;
   let side = node.state.opening ? +$("manSide").value : node.state.t;
   if (node.state.opening && d1 === d2) { toast("La primera tirada no puede ser doble."); return; }
@@ -2492,6 +2555,8 @@ boardEl.addEventListener("pointerdown", e => {
   const hit = hitFromEvent(e);
   if (!hit) return;
   if (editor.active) { editorPointer(hit, e); return; }
+  if (ui.count) { countClick(hit); return; }
+  if (ui.pipq) return;
   if (hit.kind === "roll") { rollDice(); return; }
   const node = cur();
   if (node.state.phase !== "roll") return;
@@ -2566,12 +2631,18 @@ function renderBoard() {
     return;
   }
   opts.cube = { v: st.cube.v, o: st.cube.o, offered: st.phase === "take" };
+  if (ui.count || ui.pipq) {
+    Object.assign(opts, ui.count ? countBoardOpts() : pipBoardOpts());
+    boardEl.innerHTML = boardSvg(pos, opts).replace(/^<svg[^>]*>|<\/svg>$/g, "");
+    renderOverlay();
+    return;
+  }
   const ctx = ctxDice(node);
   if (ctx && st.phase === "roll") {
     opts.dice = ctx.dice; opts.diceSide = ctx.side; opts.mover = ctx.side;
     const P = ui.partial && ui.partial.node === node ? ui.partial : null;
     if (P) opts.usedDice = P.steps.map(x => x[3]);
-    if (ui.sel != null && P && settings.showLegal) { opts.sel = ui.sel; opts.targets = targetsFrom(P, ui.sel); }
+    if (ui.sel != null && P && settings.showLegal) { opts.sel = ui.sel; opts.targets = targetsFrom(P, ui.sel); opts.dieLabels = settings.dieLabels; }
     else if (ui.sel != null) opts.sel = ui.sel;
     if (!P || !P.steps.length) {
       const showBest = (settings.arrow && settings.live && !quiz() && !ui.cpu.on) || (ui.hint && ui.hint.node === node);
@@ -2593,7 +2664,7 @@ function renderOverlay() {
   const ov = $("boardOverlay"), node = cur(), st = node.state;
   ov.hidden = true;
   ov.innerHTML = "";
-  if (editor.active || ui.ex || node.children.length) return;
+  if (editor.active || quiz() || node.children.length) return;
   if (st.phase === "take") {
     const taker = 1 - st.doubler;
     if (ui.cpu.on && taker === ui.cpu.side) return;
@@ -2649,6 +2720,7 @@ function playMove(a, who = "user") {
   setTimeout(afterAction, 30);
 }
 function doCube(type) {
+  if (quiz()) return;
   const node = cur(), st = node.state;
   let a;
   if (type === "double") {
@@ -2743,6 +2815,8 @@ function renderStatus() {
   }
   if (ui.cpu.on && ui.cpu.busy) txt += " · 🤖 la CPU está pensando…";
   if (ui.ex) txt = "🎯 " + (ui.ex.label || "Ejercicio") + " · " + txt;
+  if (ui.count) txt = "🧮 Contar casillas · " + (ui.count.q && ui.count.q.done ? "pulsa «Siguiente»" : "pulsa el punto que responde a la pregunta de abajo");
+  if (ui.pipq) txt = "🔢 Recuento de pips · responde en el recuadro de abajo";
   el.textContent = txt;
   el.className = "status-line" + (cls ? " " + cls : "");
 }
@@ -3059,6 +3133,7 @@ function setGame(g, opts = {}) {
   game.current = opts.current || g.root;
   Object.assign(ui, { rolled: null, partial: null, sel: null, hint: null, report: null, analysedLine: null });
   if (Retry.active && !opts.keepEx) retryEnd(true);
+  if (!opts.keepEx) { ui.count = null; ui.pipq = null; ui.hidePips = false; hideDrill(); }
   $("reportExtra").innerHTML = "";
   $("retryStart").hidden = true;
   ui.libId = opts.libId || null;
@@ -3407,7 +3482,7 @@ async function explainCurrentMove() {
 }
 
 /* ---------- Ejercicios (aprende de tus errores, tarjetas, aperturas, pips) ---------- */
-function setExercise(ex) { ui.ex = Object.assign({ busy: false, done: false, arrows: [], attempts: 0, hint: 0 }, ex); ui.partial = null; ui.sel = null; ui.hint = null; game.current = ex.node; render(); }
+function setExercise(ex) { ui.count = null; ui.pipq = null; hideDrill(); ui.hidePips = false; ui.ex = Object.assign({ busy: false, done: false, arrows: [], attempts: 0, hint: 0 }, ex); ui.partial = null; ui.sel = null; ui.hint = null; game.current = ex.node; render(); }
 function exitExercise() { if (!ui.ex) return; ui.ex = null; ui.partial = null; render(); }
 const Stash = {
   s: null,
@@ -3415,6 +3490,7 @@ const Stash = {
     if (this.s) return true;
     if (Retry.active) retryEnd(true);
     $("retryBox").hidden = true;
+    hideDrill();
     if (!confirmLeave()) return false;
     this.s = { game, current: game.current, flipped: ui.flipped, libId: ui.libId, fav: ui.fav, tags: ui.tags.slice(), name: $("gameName").value, dirty: ui.dirty && !ui.libId };
     if (ui.cpu.on) toggleCpu(false);
@@ -3425,7 +3501,8 @@ const Stash = {
     const st = this.s;
     this.s = null;
     $("exBackBtn").hidden = true;
-    $("pipQuizBox").hidden = true;
+    hideDrill();
+    ui.count = null; ui.pipq = null;
     $("trainFeedback").hidden = true;
     ui.hidePips = false;
     ui.ex = null;
@@ -3656,8 +3733,7 @@ function openingMove(a) {
   $("oqNext").onclick = () => { ui.ex = null; startOpeningQuiz(); };
 }
 
-/* Recuento de pips */
-const PQ = { ok: 0, n: 0, pos: null };
+/* Posición de medio juego al azar (con contacto) */
 function randomMidgame() {
   for (let tries = 0; tries < 30; tries++) {
     let pos = BG.startPos(), t = Math.random() < 0.5 ? 0 : 1;
@@ -3673,32 +3749,423 @@ function randomMidgame() {
   }
   return { pos: BG.startPos(), t: 0 };
 }
-function startPipQuiz() {
-  if (!Stash.s && !Stash.save()) return;
-  ui.ex = null;
-  const r = randomMidgame();
-  PQ.pos = r.pos;
-  tempGame(r.pos, r.t, "🔢 Recuento de pips");
-  ui.hidePips = true;
-  $("pipQuizBox").hidden = false;
-  $("pipW").value = ""; $("pipB").value = "";
-  $("pipQuizMsg").textContent = "";
-  switchTab("train");
-  render();
-  $("pipW").focus();
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const COLOR_ES = ["blanca", "negra"];
+
+/* Caja de ejercicio bajo el tablero */
+function drillBox(html) {
+  const box = $("drillBox");
+  box.innerHTML = html;
+  box.hidden = false;
+  return box;
 }
-function checkPipQuiz() {
-  if (!PQ.pos) return;
-  const w = BG.pip(PQ.pos[0]), b = BG.pip(PQ.pos[1]);
-  const uw = +$("pipW").value, ub = +$("pipB").value;
+function hideDrill() { $("drillBox").hidden = true; $("drillBox").innerHTML = ""; }
+
+/* ---------- Contar casillas ---------- */
+const CNT = { ok: 0, n: 0, streak: 0, best: LS.get("bgbCountBest", 0) };
+const CNT_LEVELS = { 1: "Un dado", 2: "Los dos dados seguidos", 3: "Entrar desde la barra", 4: "Sacar fichas", 5: "Fichas del rival", 6: "Mezcla" };
+const isOpen = (pos, side, idx) => idx >= 0 && idx < 24 && pos[1 - side][23 - idx] < 2;
+function randomHome(n) { const s = Array(25).fill(0); for (let k = 0; k < n; k++) s[Math.floor(Math.random() * 6)]++; return s; }
+function countQuestion(level) {
+  const lv = level === 6 ? 1 + Math.floor(Math.random() * 5) : level;
+  for (let tries = 0; tries < 40; tries++) {
+    if (lv === 4) {
+      for (let k = 0; k < 30; k++) {
+        const me = randomHome(3 + Math.floor(Math.random() * 10)), op = randomHome(4 + Math.floor(Math.random() * 11));
+        const d = rndDie();
+        let hi = -1;
+        for (let i = 5; i >= 0; i--) if (me[i]) { hi = i; break; }
+        let ans = null;
+        if (me[d - 1]) ans = d - 1;
+        else if (hi < d - 1) ans = hi;
+        if (ans == null || ans < 0) continue;
+        return { lv, kind: "off", pos: [me, op], side: 0, from: null, dice: [d], d, ansIdx: ans };
+      }
+      continue;
+    }
+    const base = randomMidgame().pos;
+    const side = lv === 5 ? 1 : 0;
+    if (base[side][24]) continue;
+    for (let k = 0; k < 40; k++) {
+      const pos = BG.clonePos(base);
+      const cand = [];
+      for (let i = 0; i < 24; i++) if (pos[side][i]) cand.push(i);
+      const f = pick(cand);
+      if (lv === 3) {
+        const d = rndDie(), to = 24 - d;
+        pos[side][f]--; pos[side][24]++;
+        if (!isOpen(pos, side, to)) continue;
+        return { lv, kind: "bar", pos, side, from: 24, dice: [d], d, ansIdx: to };
+      }
+      if (lv === 2) {
+        const d1 = rndDie(), d2 = rndDie();
+        if (d1 === d2) continue;
+        const to = f - d1 - d2;
+        if (to < 0 || !isOpen(pos, side, to)) continue;
+        const a = isOpen(pos, side, f - d1), b = isOpen(pos, side, f - d2);
+        if (!a && !b) continue;
+        const hi = Math.max(d1, d2), lo = Math.min(d1, d2);
+        const first = isOpen(pos, side, f - hi) ? hi : lo;
+        return { lv, kind: "two", pos, side, from: f, dice: [hi, lo], first, second: first === hi ? lo : hi, both: a && b, ansIdx: to };
+      }
+      const d = rndDie(), to = f - d;
+      if (to < 0 || !isOpen(pos, side, to)) continue;
+      return { lv, kind: "one", pos, side, from: f, dice: [d], d, ansIdx: to };
+    }
+  }
+  return { lv: 1, kind: "one", pos: BG.startPos(), side: 0, from: 12, dice: [5], d: 5, ansIdx: 7 };
+}
+/* Número del punto tal como se ve en el tablero (numeración del jugador de abajo) */
+const boardNo = (side, idx) => (side === bottom() ? idx + 1 : 24 - idx);
+function countQuestionText(q) {
+  if (q.kind === "one" && q.side === 0) return `La ficha marcada en amarillo avanza <b>un ${q.d}</b>. ¿En qué punto cae? Pulsa el punto.`;
+  if (q.kind === "one") return `Ahora mueve el rival: la ficha <b>negra</b> marcada avanza <b>un ${q.d}</b>. ¿En qué punto cae? Ojo: el rival va en sentido contrario.`;
+  if (q.kind === "two") return `La ficha marcada juega <b>los dos dados seguidos (${q.dice[0]} y ${q.dice[1]})</b>. ¿Dónde termina?`;
+  if (q.kind === "bar") return `Tienes una ficha en la barra y sacas <b>un ${q.d}</b>. ¿En qué punto entra?`;
+  return `Todas tus fichas están en casa y sacas <b>un ${q.d}</b>. ¿Qué ficha puedes sacar? Pulsa su punto.`;
+}
+function countExplain(q) {
+  const f = q.from, to = q.ansIdx;
+  if (q.kind === "one" && q.side === 0) return `Desde el ${f + 1} se cuenta hacia abajo: ${f + 1} − ${q.d} = <b>${to + 1}</b>. Las marcas azules cuentan casilla a casilla.`;
+  if (q.kind === "one") return `El rival cuenta desde su lado: la ficha está en su ${f + 1} y llega a su ${to + 1} (${f + 1} − ${q.d}). En tu numeración es al revés y se suma: del ${boardNo(1, f)} al <b>${boardNo(1, to)}</b> (${boardNo(1, f)} + ${q.d}).`;
+  if (q.kind === "two") return `${f + 1} − ${q.dice[0]} − ${q.dice[1]} = <b>${to + 1}</b>. Puedes contar primero el ${q.first} (paras en el ${f + 1 - q.first}, en naranja) y luego el ${q.second}.${q.both ? "" : ` En el otro orden no se puede: el ${f + 1 - q.second} está bloqueado.`} Cada parada tiene que estar libre (con menos de dos fichas rivales).`;
+  if (q.kind === "bar") return `Desde la barra se entra en el campo del rival: con un ${q.d} caes en <b>su punto ${q.d}</b>, que para ti es el <b>${25 - q.d}</b> (25 − ${q.d}). Se cuenta empezando por tu 24.`;
+  if (to === q.d - 1) return `Con un ${q.d} sale la ficha del <b>punto ${q.d}</b>: está justo a ${q.d} casillas de la salida.`;
+  return `No tienes fichas en el ${q.d} ni en puntos más altos: cuando el dado es mayor que tu punto más alto, sacas la ficha del <b>punto más alto (el ${to + 1})</b>.`;
+}
+function countMarks(q, wrong) {
+  const m = [], side = q.side;
+  if (q.kind === "one" || q.kind === "two") {
+    const total = q.from - q.ansIdx;
+    for (let k = 1; k <= total; k++) {
+      const idx = q.from - k;
+      m.push({ side, idx, text: k, kind: idx === q.ansIdx ? "ok" : q.kind === "two" && k === q.first ? "info" : "step" });
+    }
+  } else if (q.kind === "bar") {
+    for (let k = 1; k <= q.d; k++) m.push({ side, idx: 24 - k, text: k, kind: k === q.d ? "ok" : "step" });
+  } else {
+    m.push({ side, idx: q.ansIdx, text: "✓", kind: "ok" });
+    if (q.ansIdx !== q.d - 1) m.push({ side, idx: q.d - 1, text: q.d, kind: "info" });
+  }
+  if (wrong != null && wrong !== q.ansIdx) {
+    const ex = m.find(x => x.idx === wrong);
+    if (ex) ex.kind = "bad"; else m.push({ side, idx: wrong, text: "✗", kind: "bad" });
+  }
+  return m;
+}
+function countBoardOpts() {
+  const q = ui.count.q;
+  const o = { mover: q.side, sel: q.kind === "off" ? null : q.from, dice: q.dice, diceSide: q.side, arrows: [], marks: q.marks || [] };
+  o.numbers = $("cntHideNums").checked && !q.done ? "off" : "bottom";
+  if (q.done) o.arrows.push(q.kind === "off" ? { side: q.side, from: q.ansIdx, to: -1, kind: "green" } : { side: q.side, from: q.from, to: q.ansIdx, kind: "green" });
+  return o;
+}
+function countPanel() {
+  const C = ui.count, q = C.q;
+  const head = `<div class="retry-head">🧮 Contar casillas · ${esc(CNT_LEVELS[C.level])}<span class="small" style="font-weight:400"> · aciertos ${CNT.ok}/${CNT.n} · racha ${CNT.streak} (mejor ${CNT.best})</span></div>`;
+  let html = head;
+  if (!q.done) html += `<div class="retry-q">${countQuestionText(q)}</div>`;
+  else html += `<div class="retry-msg">${q.ok ? "✔ <b>¡Correcto!</b>" : "❌ <b>No.</b> Tu clic está en rojo y la respuesta en verde."} ${countExplain(q)}</div>`;
+  html += `<div class="controls">${q.done ? `<button class="sm-btn primary" data-a="next">Siguiente ▶</button>` : `<button class="sm-btn" data-a="show">👁 Ver respuesta</button>`}<button class="sm-btn" data-a="lesson">📖 Cómo se cuenta</button><button class="sm-btn danger" data-a="end">⏹ Terminar</button></div>`;
+  const box = drillBox(html);
+  box.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === "next") nextCount();
+    else if (a === "show") countAnswer(null);
+    else if (a === "lesson") openLesson("count");
+    else Stash.restore();
+  });
+}
+function startCount() {
+  if (!Stash.save()) return;
+  ui.ex = null; ui.pipq = null;
+  ui.count = { level: +$("cntLevel").value, q: null };
+  nextCount();
+  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("topBar").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
+}
+function nextCount() {
+  const C = ui.count;
+  if (!C) return;
+  clearTimeout(C.timer);
+  const q = countQuestion(C.level);
+  C.q = q;
+  ui.flipped = false;
+  tempGame(q.pos, q.side, "🧮 Contar casillas");
+  ui.count = C;
+  render();
+  countPanel();
+}
+function countClick(hit) {
+  const q = ui.count && ui.count.q;
+  if (!q || q.done) return;
+  const idx = idxOf(hit, q.side);
+  if (idx == null) return;
+  countAnswer(idx);
+}
+function countAnswer(idx) {
+  const C = ui.count, q = C.q;
+  q.done = true;
+  q.ok = idx != null && idx === q.ansIdx;
+  CNT.n++;
+  if (q.ok) { CNT.ok++; CNT.streak++; if (CNT.streak > CNT.best) { CNT.best = CNT.streak; LS.set("bgbCountBest", CNT.best); } }
+  else CNT.streak = 0;
+  q.marks = countMarks(q, idx);
+  $("cntScore").textContent = `${CNT.ok} / ${CNT.n}`;
+  Sound.play(q.ok ? "ok" : "error");
+  renderBoard(); renderStatus();
+  countPanel();
+  if (q.ok) C.timer = setTimeout(() => { if (ui.count === C && C.q === q) nextCount(); }, 2600);
+}
+
+/* ---------- Recuento de pips ---------- */
+const PQ = { ok: 0, n: 0 };
+const PIP_LEVELS = { 1: "Un montón", 2: "Un cuadrante", 3: "Un bando", 4: "Los dos bandos", 5: "Conteo continuo" };
+const QUAD = ["su campo (puntos 1-6)", "su exterior (7-12)", "el exterior rival (13-18)", "el campo rival (19-24)"];
+const QUAD_SHORT = ["campo", "exterior", "exterior rival", "campo rival"];
+const stackPips = (s, i) => s[i] * (i === 24 ? 25 : i + 1);
+function pipMarks(pos, sides, from = 0, to = 24) {
+  const m = [];
+  for (const side of sides) for (let i = from; i <= to; i++) if (pos[side][i]) m.push({ side, idx: i, text: stackPips(pos[side], i), kind: "pip" });
+  return m;
+}
+function pipBreakdown(pos, side) {
+  const s = pos[side], q = [0, 0, 0, 0];
+  for (let i = 0; i < 24; i++) q[Math.floor(i / 6)] += stackPips(s, i);
+  const parts = q.map((v, i) => (v ? `${QUAD_SHORT[i]} ${v}` : null)).filter(Boolean);
+  if (s[24]) parts.push(`barra ${stackPips(s, 24)}`);
+  return `${SIDE_ES[side]}: ${parts.join(" + ") || "0"} = <b>${BG.pip(s)}</b>`;
+}
+function pipBoardOpts() {
+  const q = ui.pipq, o = { numbers: "bottom", arrows: [], marks: [] };
+  if (q.level === 1) { o.mover = q.side; o.sel = q.idx; }
+  if (q.level === 2) o.zone = { side: q.side, from: q.quad * 6, to: q.quad * 6 + 5 };
+  if (q.level === 5 && q.action) for (const st of q.action.steps) o.arrows.push({ side: q.action.side, from: st[0], to: st[1], kind: "last" });
+  if (q.checked) {
+    if (q.level === 1) o.marks = pipMarks(q.pos, [q.side], q.idx, q.idx);
+    else if (q.level === 2) o.marks = pipMarks(q.pos, [q.side], q.quad * 6, q.quad * 6 + 5);
+    else if (q.level === 3) o.marks = pipMarks(q.pos, [q.side]);
+    else o.marks = pipMarks(q.pos, [0, 1]);
+  }
+  return o;
+}
+function startPip() {
+  if (!Stash.save()) return;
+  ui.ex = null; ui.count = null;
+  nextPip();
+  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("topBar").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
+}
+function nextPip() {
+  const level = +$("pipLevel").value;
+  const r = randomMidgame();
+  const q = { level, pos: r.pos, checked: false };
+  ui.pipq = null;
+  ui.flipped = false;
+  if (level === 5) {
+    const before = BG.clonePos(r.pos);
+    let mv = null, d1 = 1, d2 = 1;
+    for (let k = 0; k < 30 && !mv; k++) {
+      d1 = rndDie(); d2 = rndDie();
+      const m = BG.cpuMove(before, r.t, d1, d2, 5);
+      if (m && m.steps.length && (k > 10 || m.steps.some(x => x[2]) || Math.random() < 0.6)) mv = m;
+    }
+    const g = tempGame(before, r.t, "🔢 Conteo continuo");
+    if (mv) {
+      const after = BG.genPos(before, r.t, mv);
+      const a = Rec.moveAction(r.t, [d1, d2], { steps: mv.steps, pos: after });
+      game.current = Rec.addAction(g.root, a);
+      Object.assign(q, { pos: after, before, action: a });
+    }
+  } else {
+    tempGame(r.pos, r.t, "🔢 Recuento de pips");
+    if (level === 1) {
+      const c = [];
+      for (const side of [0, 1]) for (let i = 0; i < 25; i++) if (r.pos[side][i] >= (i === 24 ? 1 : 2) || (r.pos[side][i] && Math.random() < 0.3)) c.push([side, i]);
+      const [side, idx] = pick(c);
+      Object.assign(q, { side, idx, answer: stackPips(r.pos[side], idx) });
+    } else if (level === 2) {
+      const c = [];
+      for (const side of [0, 1]) for (let k = 0; k < 4; k++) { let n = 0; for (let i = k * 6; i < k * 6 + 6; i++) n += r.pos[side][i]; if (n >= 2) c.push([side, k]); }
+      const [side, quad] = pick(c);
+      let sum = 0;
+      for (let i = quad * 6; i < quad * 6 + 6; i++) sum += stackPips(r.pos[side], i);
+      Object.assign(q, { side, quad, answer: sum });
+    } else if (level === 3) {
+      const side = Math.random() < 0.5 ? 0 : 1;
+      Object.assign(q, { side, answer: BG.pip(r.pos[side]) });
+    }
+  }
+  ui.pipq = q;
+  ui.hidePips = true;
+  render();
+  pipPanel();
+  const f = $("pipA");
+  if (f) f.focus({ preventScroll: true });
+}
+function pipQuestionText(q) {
+  if (q.level === 1) {
+    const n = q.pos[q.side][q.idx];
+    if (q.idx === 24) return `¿Cuántos pips suman las ${n} ficha${n > 1 ? "s" : ""} ${COLOR_ES[q.side]}${n > 1 ? "s" : ""} de la <b>barra</b>?`;
+    return `¿Cuántos pips suman las fichas ${COLOR_ES[q.side]}s del punto marcado en amarillo?${q.side === 1 ? " Recuerda: las negras se cuentan desde su lado." : ""}`;
+  }
+  if (q.level === 2) return `¿Cuántos pips suman las fichas <b>${COLOR_ES[q.side]}s</b> de la zona azul (${QUAD[q.quad]} de las ${SIDE_ES[q.side]})?`;
+  if (q.level === 3) return `¿Cuántos pips tienen las <b>${SIDE_ES[q.side]}</b> en total?`;
+  if (q.level === 4) return `¿Cuántos pips tiene cada bando? ¿Quién va delante en la carrera?`;
+  if (!q.action) return `¿Cuántos pips tiene cada bando?`;
+  const a = q.action;
+  return `Antes de la jugada: Blancas <b>${BG.pip(q.before[0])}</b> y Negras <b>${BG.pip(q.before[1])}</b>. Las ${SIDE_ES[a.side]} juegan <b>${a.dice.join("-")}: ${esc(a.text)}</b> (flecha amarilla). ¿Cuántos pips tiene ahora cada bando? Calcúlalo sin contar todo otra vez.`;
+}
+function pipPanel(msg) {
+  const q = ui.pipq;
+  const two = q.level >= 4;
+  let html = `<div class="retry-head">🔢 Recuento de pips · ${esc(PIP_LEVELS[q.level])}<span class="small" style="font-weight:400"> · aciertos ${PQ.ok}/${PQ.n}</span></div><div class="retry-q" style="font-weight:400">${pipQuestionText(q)}</div>`;
+  if (!q.checked) {
+    html += two
+      ? `<div class="grid2" style="margin-top:6px"><div><label for="pipA">Pips de Blancas</label><input id="pipA" inputmode="numeric" autocomplete="off"></div><div><label for="pipB2">Pips de Negras</label><input id="pipB2" inputmode="numeric" autocomplete="off"></div></div>`
+      : `<div style="margin-top:6px;max-width:220px"><label for="pipA">Pips</label><input id="pipA" inputmode="numeric" autocomplete="off"></div>`;
+  }
+  if (msg) html += `<div class="retry-msg">${msg}</div>`;
+  html += `<div class="controls">${q.checked ? `<button class="sm-btn primary" data-a="next">Siguiente ▶</button>` : `<button class="sm-btn primary" data-a="check">✔ Comprobar</button>`}<button class="sm-btn" data-a="lesson">📖 Cómo se cuentan</button><button class="sm-btn danger" data-a="end">⏹ Terminar</button></div>`;
+  const box = drillBox(html);
+  box.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === "check") checkPip();
+    else if (a === "next") nextPip();
+    else if (a === "lesson") openLesson("pips");
+    else Stash.restore();
+  });
+  box.querySelectorAll("input").forEach((inp, i, all) => inp.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (i < all.length - 1 && !all[i + 1].value) all[i + 1].focus(); else checkPip();
+  }));
+}
+function checkPip() {
+  const q = ui.pipq;
+  if (!q || q.checked) return;
+  const val = id => ($(id) && $(id).value.trim() !== "" ? +$(id).value : NaN);
+  let ok, msg;
+  if (q.level <= 3) {
+    const v = val("pipA");
+    if (isNaN(v)) { toast("Escribe un número."); return; }
+    ok = v === q.answer;
+    let how;
+    if (q.level === 1) {
+      const n = q.pos[q.side][q.idx];
+      how = q.idx === 24 ? `En la barra cada ficha vale 25: ${n} × 25 = <b>${q.answer}</b>.`
+        : `${n} ficha${n > 1 ? "s" : ""} × punto ${q.idx + 1} = <b>${q.answer}</b>.${q.side === 1 ? ` Las negras se cuentan desde su lado: ese punto es su ${q.idx + 1} (tu ${24 - q.idx}).` : ""}`;
+    } else if (q.level === 2) {
+      const parts = [];
+      for (let i = q.quad * 6; i < q.quad * 6 + 6; i++) if (q.pos[q.side][i]) parts.push(`${q.pos[q.side][i]}×${i + 1}`);
+      how = `${parts.join(" + ")} = <b>${q.answer}</b>. (Puntos contados desde el lado de las ${SIDE_ES[q.side]}.)`;
+    } else how = pipBreakdown(q.pos, q.side) + ". Truco: suma cada cuadrante por separado y luego los subtotales.";
+    msg = (ok ? "✔ <b>¡Exacto!</b> " : `❌ Has puesto ${v}. `) + how;
+  } else {
+    const w = val("pipA"), b = val("pipB2");
+    if (isNaN(w) || isNaN(b)) { toast("Escribe los pips de los dos bandos."); return; }
+    const W = BG.pip(q.pos[0]), Bk = BG.pip(q.pos[1]);
+    ok = w === W && b === Bk;
+    msg = (ok ? "✔ <b>¡Exacto!</b>" : `❌ Has puesto ${w} y ${b}.`) + `<br>${pipBreakdown(q.pos, 0)}<br>${pipBreakdown(q.pos, 1)}`;
+    if (W !== Bk) msg += `<br>Van delante las <b>${W < Bk ? "Blancas" : "Negras"}</b> por ${Math.abs(W - Bk)} pips (un ${(Math.abs(W - Bk) / Math.max(W, Bk) * 100).toFixed(1).replace(".", ",")} % del recuento mayor).`;
+    else msg += "<br>Están igualados.";
+    if (q.level === 5 && q.action) {
+      const a = q.action, s = a.side, o = 1 - s;
+      const before = [BG.pip(q.before[0]), BG.pip(q.before[1])], after = [W, Bk];
+      const moved = before[s] - after[s], dsum = a.dice[0] === a.dice[1] ? a.dice[0] * 4 : a.dice[0] + a.dice[1];
+      let ex = `<br><b>Cómo se calcula:</b> las ${SIDE_ES[s]} restan lo que avanzan: ${before[s]} − ${moved} = ${after[s]}`;
+      ex += moved === dsum ? ` (${a.dice[0] === a.dice[1] ? `${a.dice[0]}×4` : `${a.dice[0]}+${a.dice[1]}`} = ${dsum}).` : moved < dsum ? ` (no ${dsum}: al sacar con un dado mayor o si no se pueden usar todos, sólo se resta lo que avanzan).` : ".";
+      const hits = a.steps.filter(x => x[2]).map(x => x[1] + 1);
+      if (hits.length) ex += ` Las ${SIDE_ES[o]} suman lo que pierden sus fichas golpeadas: cada una vuelve a la barra y suma <b>el número del punto donde la golpean, contado desde quien golpea</b> (${hits.join(" + ")}): ${before[o]} + ${after[o] - before[o]} = ${after[o]}.`;
+      else ex += ` Las ${SIDE_ES[o]} no cambian: ${before[o]}.`;
+      msg += ex;
+    }
+  }
+  q.checked = true;
   PQ.n++;
-  const ok = uw === w && ub === b;
   if (ok) PQ.ok++;
   $("pipQuizScore").textContent = `${PQ.ok} / ${PQ.n}`;
-  $("pipQuizMsg").innerHTML = ok ? `<span class="msg-ok">✔ ¡Exacto! ${w} y ${b}.</span>` : `<span class="msg-err">❌ Eran ${w} (Blancas) y ${b} (Negras).</span> Diferencia: ${Math.abs(w - b)} pips a favor de ${w < b ? "Blancas" : "Negras"}.`;
   Sound.play(ok ? "ok" : "error");
   ui.hidePips = false;
-  renderBars(); renderPhase();
+  render();
+  pipPanel(msg + `<br><span class="small">Los números del marco muestran los pips de cada montón.</span>`);
+}
+
+/* ---------- Lecciones ---------- */
+function lessonFig(pos, opts, caption) {
+  return `<figure class="lesson-fig">${boardSvg(pos, Object.assign({ numbers: "bottom", theme: settings.theme, cube: { v: 1, o: -1 } }, opts))}<figcaption>${caption}</figcaption></figure>`;
+}
+const SHOTS = [[1, 11], [2, 12], [3, 14], [4, 15], [5, 15], [6, 17], [7, 6], [8, 6], [9, 5], [10, 3], [11, 2], [12, 3], [15, 1], [16, 1], [18, 1], [20, 1], [24, 1]];
+function lessonCount() {
+  const start = BG.startPos();
+  const m1 = []; for (let k = 1; k <= 8; k++) m1.push({ side: 0, idx: 12 - k, text: k, kind: k === 8 ? "ok" : k === 5 ? "info" : "step" });
+  const barPos = [sideFrom({ 6: 4, 8: 3, 13: 4, 24: 1, bar: 1 }), sideFrom({ 6: 5, 8: 3, 13: 5, 24: 2 })];
+  const m2 = []; for (let k = 1; k <= 4; k++) m2.push({ side: 0, idx: 24 - k, text: k, kind: k === 4 ? "ok" : "step" });
+  const home = [sideFrom({ 1: 2, 2: 3, 3: 2, 5: 3, 6: 2 }), sideFrom({ 1: 2, 2: 3, 3: 3, 4: 3, 5: 2, 6: 2 })];
+  return `
+  <details open><summary>1. Cada jugador cuenta desde su lado</summary>
+    <p>Los puntos van del 1 al 24 <b>desde el campo de cada jugador</b>. Tu punto 1 es el último antes de salir y tu 24 es el primero del rival (su punto 1). Siempre mueves de números altos a bajos; el rival, al revés en tu numeración.</p>
+    <p>Por eso las jugadas se escriben desde el lado de quien mueve: «13/8» de las Negras es su 13 y su 8, que en tus números serían el 12 y el 17.</p>
+  </details>
+  <details open><summary>2. Avanzar es restar</summary>
+    <p>Con un dado, la ficha avanza tantas casillas como marca: <b>punto de salida − dado = punto de llegada</b>. Con los dos dados, una ficha puede usar uno y luego el otro, pero cada parada tiene que estar libre (un punto con 2 o más fichas rivales está <b>bloqueado</b>). Los dobles se juegan cuatro veces.</p>
+    ${lessonFig(start, { marks: m1, dice: [5, 3], diceSide: 0, arrows: [{ side: 0, from: 12, to: 4, kind: "green" }] }, "Desde el 13 con 5-3: el 5 llega al 8 (naranja) y el 3 al 5. 13 − 5 − 3 = 5.")}
+    <p><b>Truco del 6:</b> cada cuadrante tiene 6 puntos, así que un 6 te lleva al mismo sitio del cuadrante siguiente: del 13 al 7, del 8 al 2, del 24 al 18. Y entre el 7 y el 6 está la barra: no cuenta como casilla.</p>
+  </details>
+  <details open><summary>3. Entrar desde la barra</summary>
+    <p>Una ficha en la barra entra por el campo del rival. Con un <b>N</b> cae en <b>su punto N</b>, que para ti es el <b>25 − N</b>: un 1 entra en tu 24, un 4 en tu 21 y un 6 en tu 19. Si ese punto está bloqueado, ese dado no sirve para entrar; y mientras tengas fichas en la barra no puedes mover ninguna otra.</p>
+    ${lessonFig(barPos, { marks: m2, dice: [4], diceSide: 0, arrows: [{ side: 0, from: 24, to: 20, kind: "green" }] }, "Con un 4 se entra en el 21: se cuenta 24, 23, 22, 21.")}
+  </details>
+  <details open><summary>4. Sacar fichas</summary>
+    <p>Cuando las 15 están en tu campo (puntos 1 a 6), un <b>N saca la ficha del punto N</b>. Si no tienes ficha en ese punto, primero tienes que mover una desde un punto más alto. Sólo si no hay ninguna más arriba, el dado saca la del <b>punto más alto</b> que tengas.</p>
+    ${lessonFig(home, { marks: [{ side: 0, idx: 4, text: "✓", kind: "ok" }, { side: 0, idx: 3, text: 4, kind: "info" }], dice: [4], diceSide: 0, arrows: [{ side: 0, from: 5, to: 3, kind: "green" }] }, "Con un 4 y el punto 4 vacío: no se puede sacar, porque hay fichas más arriba (en el 5 y el 6). Hay que mover, por ejemplo 6/2 o 5/1.")}
+  </details>
+  <details open><summary>5. ¿A cuántas casillas me pueden golpear?</summary>
+    <p>Una ficha suelta a 6 casillas o menos de una rival se golpea con un solo dado (<b>tiro directo</b>); de 7 a 12 sólo con la suma de los dos (<b>indirecto</b>), mucho menos probable. Tiradas de 36 que golpean, sin puntos bloqueados por medio:</p>
+    <table class="rep-phases" style="max-width:520px"><tr><td>Distancia</td>${SHOTS.map(x => `<th>${x[0]}</th>`).join("")}</tr><tr><td>Tiradas</td>${SHOTS.map(x => `<td>${x[1]}</td>`).join("")}</tr></table>
+    <p class="small">Regla práctica: lo más arriesgado es quedar a 6 o menos; a partir de 7 el riesgo cae de golpe.</p>
+  </details>
+  <details open><summary>6. Ayudas de la aplicación</summary>
+    <ul>
+      <li>Al pulsar una ficha, cada destino muestra <b>el dado con el que llega</b> («4», «6+4», «3×3»). Se quita en ⚙ Ajustes.</li>
+      <li>Practica en <b>🎯 Entrenar › 🧮 Contar casillas</b>; activa «sin números» cuando quieras contar de memoria.</li>
+    </ul>
+  </details>`;
+}
+function lessonPips() {
+  const start = BG.startPos();
+  const cmp = [sideFrom({ 6: 3, 8: 2, 13: 2, 4: 2 }), sideFrom({ 6: 3, 8: 2, 13: 2, 10: 1, 3: 1 })];
+  return `
+  <details open><summary>1. Qué es un pip</summary>
+    <p>Un <b>pip</b> es una casilla que le falta recorrer a una ficha para salir del tablero. Una ficha en tu punto 8 tiene 8 pips; en la barra, 25. El <b>recuento de pips</b> de un bando es la suma de todas sus fichas: cuanto menor, más cerca está de terminar.</p>
+    ${lessonFig(start, { marks: pipMarks(start, [0]) }, "Posición inicial (Blancas): 2×24 = 48, 5×13 = 65, 3×8 = 24, 5×6 = 30. Total 167; las Negras, igual.")}
+  </details>
+  <details open><summary>2. Fichas × punto, y de memoria las de la salida</summary>
+    <p>Cada montón vale <b>fichas × número del punto</b> (contado desde el lado de su dueño). Conviene saberse de memoria la posición inicial: <b>48 + 65 + 24 + 30 = 167</b>. Las fichas negras se cuentan con sus números: una negra en tu punto 8 está en su 17 y vale 17.</p>
+  </details>
+  <details open><summary>3. Cuenta por cuadrantes</summary>
+    <p>En vez de una suma larga, haz cuatro pequeñas: tu campo (1-6), tu exterior (7-12), el exterior rival (13-18) y el campo rival (19-24), más la barra. Luego suma los subtotales. Equivocarse en una suma corta es más difícil.</p>
+  </details>
+  <details open><summary>4. Cancelar lo que es igual</summary>
+    <p>Para saber <b>quién va delante</b> no hace falta el total: si los dos tenéis fichas en el mismo número de punto (cada uno desde su lado), se anulan. Cuenta sólo lo que es distinto.</p>
+    ${lessonFig(cmp, { marks: pipMarks(cmp, [0, 1]) }, "Los dos tienen 3 en su 6, 2 en su 8 y 2 en su 13: se anulan. Quedan las Blancas 2×4 = 8 y las Negras 10 + 3 = 13. Las Blancas van 5 pips por delante (68 contra 73).")}
+  </details>
+  <details open><summary>5. Conteo continuo</summary>
+    <p>Los buenos jugadores no cuentan desde cero cada vez: llevan la cuenta. Tras cada jugada, quien mueve <b>resta la suma de los dados</b> (los dobles, ×4: un 6-6 son 24 pips). Si golpeas, el rival <b>suma el número del punto donde le has golpeado, contado desde tu lado</b>: golpear en tu 5 le cuesta 5 pips; en tu 20, 20.</p>
+    <p class="small">Excepción: al sacar fichas con un dado mayor que la distancia, sólo se resta lo que la ficha avanza.</p>
+  </details>
+  <details open><summary>6. Para qué sirve</summary>
+    <ul>
+      <li>En la <b>carrera</b> (sin contacto), quien tiene menos pips y además tira es favorito. Regla rápida para el cubo: con un 8 % de ventaja se dobla, con un 9 % se redobla y el rival acepta si la ventaja es del 12 % o menos.</li>
+      <li>Para afinar más, usa el recuento de Keith en la pestaña <b>🏁 Carrera</b>.</li>
+      <li>Practica en <b>🎯 Entrenar › 🔢 Recuento de pips</b>, del nivel 1 (un montón) al 5 (conteo continuo).</li>
+    </ul>
+  </details>`;
+}
+function openLesson(kind) {
+  ui.lesson = kind;
+  document.querySelectorAll(".lesson-tab").forEach(b => b.classList.toggle("active", b.dataset.lesson === kind));
+  $("lessonBody").innerHTML = kind === "pips" ? lessonPips() : lessonCount();
+  if (!$("lessonModal").classList.contains("open")) openModal("lessonModal");
+  $("lessonBody").scrollTop = 0;
 }
 
 /* =========================================================================
@@ -4679,7 +5146,7 @@ document.querySelectorAll(".sub-btn").forEach(b => b.onclick = () => switchSub(b
 function openModal(id) {
   if (id === "settingsModal") {
     $("setAnalysisPly").value = String(settings.analysisPly); $("setTop").value = String(settings.top); $("setNumbers").value = settings.numbers; $("setHome").value = settings.home;
-    $("setBearoff").checked = settings.bearoff; $("setLegal").checked = settings.showLegal; $("setAutoRoll").checked = settings.autoRoll;
+    $("setBearoff").checked = settings.bearoff; $("setLegal").checked = settings.showLegal; $("setDieLabels").checked = settings.dieLabels; $("setAutoRoll").checked = settings.autoRoll;
     $("setAutosave").checked = settings.autosave; $("setWheel").checked = settings.wheel; $("setPips").checked = settings.pips;
   }
   if (!document.querySelector(".modal-back.open")) ui.modalReturn = document.activeElement;
@@ -4750,6 +5217,7 @@ $("setNumbers").onchange = e => { settings.numbers = e.target.value; saveSetting
 $("setHome").onchange = e => { settings.home = e.target.value; saveSettings(); renderBoard(); };
 $("setBearoff").onchange = e => { settings.bearoff = e.target.checked; saveSettings(); if (settings.bearoff) Engine.call("bearoff", {}).catch(() => {}); updateEngineBadge(); };
 $("setLegal").onchange = e => { settings.showLegal = e.target.checked; saveSettings(); renderBoard(); };
+$("setDieLabels").onchange = e => { settings.dieLabels = e.target.checked; saveSettings(); renderBoard(); };
 $("setAutoRoll").onchange = e => { settings.autoRoll = e.target.checked; saveSettings(); };
 $("setAutosave").onchange = e => { settings.autosave = e.target.checked; saveSettings(); if (!settings.autosave) { try { localStorage.removeItem("bgbCurrent"); } catch {} } };
 $("setWheel").onchange = e => { settings.wheel = e.target.checked; saveSettings(); };
@@ -4764,7 +5232,7 @@ $("newGo").onclick = () => {
   if (!confirmLeave()) return;
   if (editor.active) closeEditor();
   if (Stash.s) { Stash.s = null; $("exBackBtn").hidden = true; }
-  ui.ex = null;
+  ui.ex = null; ui.count = null; ui.pipq = null; ui.hidePips = false; hideDrill();
   const ml = +$("newLen").value, cpu = $("newCpu").value === "cpu";
   const g = Rec.newGame({ ml, white: $("newWhite").value.trim() || (cpu && !ui.flipped ? "Yo" : "Blancas"), black: $("newBlack").value.trim() || (cpu && !ui.flipped ? "CPU" : "Negras") });
   closeModals();
@@ -4917,9 +5385,12 @@ $("storageRefreshBtn").onclick = () => updateStorage();
 $("cardsDueBtn").onclick = () => startCards(false);
 $("cardsAllBtn").onclick = () => startCards(true);
 $("openQuizBtn").onclick = () => startOpeningQuiz();
-$("pipQuizBtn").onclick = startPipQuiz;
-$("pipCheckBtn").onclick = checkPipQuiz;
-$("pipB").addEventListener("keydown", e => { if (e.key === "Enter") checkPipQuiz(); });
+$("pipQuizBtn").onclick = startPip;
+$("cntStartBtn").onclick = startCount;
+$("cntLessonBtn").onclick = () => openLesson("count");
+$("pipLessonBtn").onclick = () => openLesson("pips");
+$("cntHideNums").onchange = () => { if (ui.count) renderBoard(); };
+document.querySelectorAll(".lesson-tab").forEach(b => b.onclick = () => openLesson(b.dataset.lesson));
 $("exBackBtn").onclick = () => Stash.restore();
 $("racePractice").onchange = e => { if (e.target.checked) { toast("Haz tu jugada: el rival tirará y jugará solo."); racePracticeReply(); } };
 $("toggleEditorModeBtn").onclick = () => (editor.active ? closeEditor() : openEditor());

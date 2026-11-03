@@ -13,7 +13,11 @@ Suite de backgammon en **un único archivo HTML**: tablero, partidas y matches, 
 - **Variantes y comentarios**, planilla de dos columnas o lista, gráfico de probabilidad.
 - **Formatos**: `.mat` (Jellyfish / GNU Backgammon), **XGID** (eXtreme Gammon), **Position ID** (GNU BG) y JSON completo.
 - **Biblioteca** local (IndexedDB) con favoritas, etiquetas, marcadores, búsqueda en comentarios y copia de seguridad.
-- **Entrenar**: tarjetas con repetición espaciada, las 15 tiradas de apertura y recuento de pips.
+- **Entrenar**: tarjetas con repetición espaciada, las 15 tiradas de apertura y:
+  - **🧮 Contar casillas**: se marca una ficha y sale un dado; pulsas el punto donde cae. Niveles: un dado, los dos dados seguidos, entrar desde la barra, sacar fichas, fichas del rival y mezcla. Si fallas, el tablero numera el recorrido casilla a casilla. Opción «sin números» para contar de memoria.
+  - **🔢 Recuento de pips** en cinco niveles: un montón (fichas × punto), un cuadrante, un bando, los dos bandos y conteo continuo tras una jugada. Al corregir, el tablero muestra los pips de cada montón y la cuenta desglosada.
+  - **📖 Lecciones con diagramas**: cómo se cuentan las casillas (numeración, barra, sacar fichas, distancias de golpe) y cómo se cuentan los pips (multiplicar, cuadrantes, cancelar, conteo continuo).
+- **Ayuda al mover**: al pulsar una ficha, cada destino indica con qué dado llega («4», «6+4», «3×3»).
 - Jugar contra la **CPU** (8 niveles), imagen PNG, impresión/PDF y enlaces para compartir.
 
 ## Uso
