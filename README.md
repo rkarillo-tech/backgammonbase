@@ -24,6 +24,8 @@ Suite de backgammon en **un único archivo HTML**: tablero, partidas y matches, 
 
 Abre `index.html` en Chrome, Edge o Firefox (doble clic) o usa la versión web. No necesita conexión ni descarga nada de terceros.
 
+En el móvil funciona en vertical y en horizontal: en horizontal, el tablero se ajusta a la altura de la pantalla y los controles quedan a su lado.
+
 ## Limitaciones
 
 El motor es heurístico, sin red neuronal: sirve para jugar y estudiar, pero no tiene la fuerza de GNU Backgammon o XG. Las decisiones de cubo son de dinero (en matches, aproximadas).

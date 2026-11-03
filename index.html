@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  BackgammonBase 1.1.0 · https://github.com/rkarillo-tech/backgammonbase
+  BackgammonBase 1.1.1 · https://github.com/rkarillo-tech/backgammonbase
 
   MIT License
 
@@ -135,6 +135,8 @@ kbd { background: var(--panel3); border: 1px solid var(--border); border-bottom-
 .engine-box { margin-top: 8px; background: #101520; border: 1px solid var(--border); border-radius: 7px; font-size: 0.83rem; }
 .engine-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 9px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .engine-head .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.engine-head .left { flex: 1 1 160px; }
+.engine-badge { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .engine-badge { color: var(--accent); font-weight: 700; white-space: nowrap; }
 .engine-meta { color: var(--muted); font-size: .76rem; white-space: nowrap; }
 .engine-lines { padding: 3px 0; min-height: 26px; }
@@ -348,6 +350,33 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
 
 /* Impresión */
 .print-view { display: none; }
+/* El tablero nunca más alto que la pantalla (tabletas, ventanas bajas) */
+.board-col { max-width: calc((100vh - 120px) / 0.76 + 31px); max-width: calc((100dvh - 120px) / 0.76 + 31px); min-width: min(300px, 100%); margin: 0 auto; }
+.side-col { min-width: 0; }
+@media (max-width: 1080px) {
+  .board-col { max-width: calc((100vh - 76px) / 0.76 + 31px); max-width: calc((100dvh - 76px) / 0.76 + 31px); }
+}
+/* Móvil u otra pantalla baja en horizontal: tablero ajustado a la altura y controles al lado */
+@media (orientation: landscape) and (max-height: 600px) {
+  header { position: static; padding: 4px 10px; }
+  h1 { font-size: .95rem; }
+  .eco-banner { font-size: .72rem; max-width: 34vw; }
+  .header-actions button, .header-actions select { padding: 3px 7px; font-size: .74rem; }
+  main { padding: 6px; gap: 8px; }
+  .panel { padding: 7px; }
+  .board-panel { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+  .board-col { width: min(64vw, calc((100vh - 70px) / 0.76 + 31px)); width: min(64vw, calc((100dvh - 70px) / 0.76 + 31px)); max-width: none; min-width: 0; margin: 0; position: sticky; top: 4px; }
+  .board-col .player-bar { min-height: 24px; padding: 2px 8px; margin-bottom: 3px; font-size: .76rem; }
+  .board-col .player-bar.bottom { margin-top: 3px; margin-bottom: 0; }
+  .board-stage { grid-template-columns: 18px 1fr; gap: 5px; }
+  .eval-score-text { font-size: 8px; }
+  .side-col > :first-child, .side-col .dice-row:first-of-type { margin-top: 0; }
+  .side-col .dice-row { margin-top: 0; }
+  .side-col .big-btn { padding: 6px 10px; }
+  .side-col .engine-box, .side-col .eval-chart-wrap, .side-col .retry-box { margin-top: 6px; }
+  .side-col .moves-box { max-height: 40vh; max-height: 40dvh; }
+  .player-info { gap: 4px; }
+}
 @media print {
   body { background: #fff !important; color: #000 !important; }
   body > *:not(#printView) { display: none !important; }
@@ -423,7 +452,8 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
 </header>
 
 <main>
-  <section class="panel" aria-label="Tablero">
+  <section class="panel board-panel" aria-label="Tablero">
+   <div class="board-col" id="boardCol">
     <div class="player-bar" id="topBar"></div>
     <div class="board-stage">
       <div class="eval-bar-outer" id="evalBarOuter" title="Probabilidad de ganar (blanco = el jugador de las fichas claras)">
@@ -437,6 +467,8 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
       </div>
     </div>
     <div class="player-bar bottom" id="bottomBar"></div>
+   </div>
+   <div class="side-col" id="sideCol">
     <div id="drillBox" class="retry-box drill-box" hidden aria-live="polite"></div>
 
     <div class="dice-row" id="diceRow">
@@ -507,6 +539,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
       <button id="printBtn" class="sm-btn" title="Imprimir o guardar como PDF la partida comentada">🖨 Imprimir</button>
       <button id="linkBtn" class="sm-btn" title="Copiar un enlace que abre esta partida en esta jugada">🔗 Enlace</button>
     </div>
+   </div>
   </section>
 
   <section class="panel" id="toolsPanel" aria-label="Herramientas">
@@ -804,7 +837,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
 </main>
 
 <footer class="app-footer">
-  BackgammonBase 1.1.0 · © 2026 Rafael Karino Arillo ·
+  BackgammonBase 1.1.1 · © 2026 Rafael Karino Arillo ·
   <button class="link-inline" id="licBtn" type="button">Licencia y créditos</button> ·
   <a href="https://github.com/rkarillo-tech/backgammonbase" target="_blank" rel="noopener noreferrer">código fuente y descargas</a>
 </footer>
@@ -1083,7 +1116,7 @@ mark { background: #ffd54f; color: #111; border-radius: 2px; padding: 0 1px; }
 <div class="modal-back" id="licModal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
   <div class="modal wide">
     <h2 id="licTitle"><span>📜 Licencia y créditos</span><button class="sm-btn" data-close>Cerrar</button></h2>
-    <p class="lic-p"><b>BackgammonBase 1.1.0</b> · © 2026 Rafael Karino Arillo (<a href="https://github.com/rkarillo-tech" target="_blank" rel="noopener noreferrer">rkarillo-tech</a>).</p>
+    <p class="lic-p"><b>BackgammonBase 1.1.1</b> · © 2026 Rafael Karino Arillo (<a href="https://github.com/rkarillo-tech" target="_blank" rel="noopener noreferrer">rkarillo-tech</a>).</p>
     <p class="lic-p">Software libre con licencia MIT: puedes usarlo, copiarlo, modificarlo y distribuirlo, también con fines comerciales, siempre que conserves este aviso de copyright y el texto de la licencia. Se ofrece tal cual, sin garantía de ningún tipo.</p>
     <details><summary>Ver el texto de la licencia</summary><pre class="lic-text">MIT License
 
@@ -2815,8 +2848,8 @@ function renderStatus() {
   }
   if (ui.cpu.on && ui.cpu.busy) txt += " · 🤖 la CPU está pensando…";
   if (ui.ex) txt = "🎯 " + (ui.ex.label || "Ejercicio") + " · " + txt;
-  if (ui.count) txt = "🧮 Contar casillas · " + (ui.count.q && ui.count.q.done ? "pulsa «Siguiente»" : "pulsa el punto que responde a la pregunta de abajo");
-  if (ui.pipq) txt = "🔢 Recuento de pips · responde en el recuadro de abajo";
+  if (ui.count) txt = "🧮 Contar casillas · " + (ui.count.q && ui.count.q.done ? "pulsa «Siguiente»" : "pulsa el punto que responde a la pregunta");
+  if (ui.pipq) txt = "🔢 Recuento de pips · responde en el recuadro del ejercicio";
   el.textContent = txt;
   el.className = "status-line" + (cls ? " " + cls : "");
 }
@@ -3548,7 +3581,7 @@ function startRetry(side) {
   if (ui.cpu.on) toggleCpu(false);
   Object.assign(Retry, { active: true, queue: q, i: 0, results: [], prevFlip: ui.flipped });
   retryShow();
-  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("topBar").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
+  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("boardCol").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
 }
 function retryShow() {
   const C = Retry.queue[Retry.i], a = C.action;
@@ -3881,7 +3914,7 @@ function startCount() {
   ui.ex = null; ui.pipq = null;
   ui.count = { level: +$("cntLevel").value, q: null };
   nextCount();
-  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("topBar").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
+  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("boardCol").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
 }
 function nextCount() {
   const C = ui.count;
@@ -3952,7 +3985,7 @@ function startPip() {
   if (!Stash.save()) return;
   ui.ex = null; ui.count = null;
   nextPip();
-  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("topBar").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
+  setTimeout(() => { const r = $("boardWrap").getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) $("boardCol").scrollIntoView({ block: "start", behavior: "smooth" }); }, 40);
 }
 function nextPip() {
   const level = +$("pipLevel").value;
